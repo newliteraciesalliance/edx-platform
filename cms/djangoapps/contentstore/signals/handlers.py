@@ -85,7 +85,7 @@ def create_catalog_data_for_signal(course_key: CourseKey) -> Optional[CourseCata
         course = store.get_course(course_key)
 
         return CourseCatalogData(
-            course_key=course_key.for_branch(None),
+            course_key=course_key.for_branch(None),  # Shouldn't be necessary, but just in case...
             name=course.display_name,
             schedule_data=CourseScheduleData(
                 start=course.start,
