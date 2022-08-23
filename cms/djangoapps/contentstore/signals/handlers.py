@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.dispatch import receiver
 from edx_toggles.toggles import SettingToggle
+from edx_event_bus_kafka.publishing.event_producer import send_to_event_bus
 from opaque_keys.edx.keys import CourseKey
 from openedx_events.content_authoring.data import CourseCatalogData, CourseScheduleData
 from openedx_events.content_authoring.signals import COURSE_CATALOG_INFO_CHANGED
@@ -155,13 +156,6 @@ def listen_for_course_catalog_info_changed(sender, signal, **kwargs):
     """
     Publish COURSE_CATALOG_INFO_CHANGED signals onto the event bus.
     """
-    try:
-        # FIXME: This needs to be replaced with a configurable loading
-        # mechanism built into openedx-events.
-        # See https://github.com/openedx/openedx-events/pull/85)
-        from edx_event_bus_kafka.publishing.event_producer import send_to_event_bus
-    except ImportError:
-        return
     send_to_event_bus(
         signal=COURSE_CATALOG_INFO_CHANGED, topic='course-catalog-info-changed',
         event_key_field='catalog_info.course_key', event_data={'catalog_info': kwargs['catalog_info']}
