@@ -14,6 +14,7 @@ from xmodule.modulestore.django import SignalHandler
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import SampleCourseFactory
 
+
 class TestCatalogInfoSignal(ModuleStoreTestCase):
     """
     Test functionality of triggering catalog info signals (and events) from course_published signal.
