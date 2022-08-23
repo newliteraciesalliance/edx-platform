@@ -10,9 +10,9 @@ from opaque_keys.edx.locator import CourseLocator, LibraryLocator
 from openedx_events.content_authoring.data import CourseCatalogData, CourseScheduleData
 
 import cms.djangoapps.contentstore.signals.handlers as sh
+from xmodule.modulestore.django import SignalHandler
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import SampleCourseFactory
-
 
 class TestCatalogInfoSignal(ModuleStoreTestCase):
     """
@@ -43,6 +43,22 @@ class TestCatalogInfoSignal(ModuleStoreTestCase):
             hidden=False,
             invitation_only=False
         )
+
+    @patch(
+        'cms.djangoapps.contentstore.signals.handlers.transaction.on_commit',
+        autospec=True, side_effect=lambda func: func(),  # run right away
+    )
+    @patch('cms.djangoapps.contentstore.signals.handlers.emit_catalog_info_changed_signal', autospec=True)
+    def test_signal_chain(self, mock_emit, _mock_on_commit):
+        """
+        Test that the course_published signal handler invokes the catalog info signal emitter.
+
+        I tested this in a bit of a weird way because I couldn't get the transaction on-commit
+        to run during the test, so instead I capture it and call the callbacks right away.
+        """
+        with SignalHandler.course_published.for_state(is_enabled=True):
+            SignalHandler.course_published.send(TestCatalogInfoSignal, course_key=self.course_key)
+        mock_emit.assert_called_once_with(self.course_key)
 
     @override_settings(SEND_CATALOG_INFO_SIGNAL=True)
     @patch('cms.djangoapps.contentstore.signals.handlers.COURSE_CATALOG_INFO_CHANGED', autospec=True)
