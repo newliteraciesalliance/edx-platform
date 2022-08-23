@@ -212,18 +212,24 @@ class CoursewareMeta:
     def entrance_exam_data(self):
         """
         Returns Entrance Exam data for the course
-
         Although some of the fields will have values (i.e. entrance_exam_minimum_score_pct and
         entrance_exam_passed), nothing will be used unless entrance_exam_enabled is True.
         """
+        if self.effective_user.is_anonymous:
+                extrance_exam_current_score = 0
+                entrance_exam_passed: False
+        else:
+            entrance_exam_current_score = get_entrance_exam_score(
+                    self.course_grade, get_entrance_exam_usage_key(self.overview),
+                )
+            entrance_exam_passed: user_has_passed_entrance_exam(self.effective_user, self.overview)
+
         return {
-            'entrance_exam_current_score': get_entrance_exam_score(
-                self.course_grade, get_entrance_exam_usage_key(self.overview),
-            ),
+            'entrance_exam_current_score': entrance_exam_current_score,
             'entrance_exam_enabled': course_has_entrance_exam(self.overview),
             'entrance_exam_id': self.overview.entrance_exam_id,
             'entrance_exam_minimum_score_pct': self.overview.entrance_exam_minimum_score_pct,
-            'entrance_exam_passed': user_has_passed_entrance_exam(self.effective_user, self.overview),
+            'entrance_exam_passed': entrance_exam_passed,
         }
 
     @property
